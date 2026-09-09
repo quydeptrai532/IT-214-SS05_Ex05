@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # ================================================================
+        # A/B TESTING — SEARCH SERVICE  |  Weight Route Predicate
+        #
+        # Nhóm "SearchGroup" có 2 route:
+        #   - search-service-v1 (stable)  -> weight 8 (80%)
+        #   - search-service-v2 (candidate) -> weight 2 (20%)
+        #
+        # Gateway chọn route theo XÁC SUẤT tỷ lệ weight:
+        #   P(v1) = 8 / (8+2) = 80% ;  P(v2) = 2 / (8+2) = 20%
+        #
+        # LƯU Ý: Các route trong cùng 1 weight group PHẢI có cùng Path predicate
+        #        (chỉ khác nhau ở Weight) để weight được tính đúng.
+        # ================================================================
+        - id: search-service-v1
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/search
+            - Weight=SearchGroup, 8
+
+        - id: search-service-v2
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/search
+            - Weight=SearchGroup, 2
